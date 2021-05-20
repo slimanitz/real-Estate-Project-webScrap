@@ -34,7 +34,7 @@ class seLogerBot:
 
     def getSize(self,soup):
         try:
-            return soup.find('div',{'data-test':'sl.tags'}).getText().strip()
+            return soup.find('ul',{'data-test':'sl.tags'}).getText().strip()
         except:
             return None
 
@@ -85,8 +85,8 @@ class seLogerBot:
         }
 
 
-    def getPropertiesData(self):
-        cardsSoup = self.getAllCards()
+    def getPropertiesData(self,url):
+        cardsSoup = self.getAllCards(url)
         l = []
         for card in cardsSoup:
             pprint.pprint(self.getPropertyData(card))
@@ -96,8 +96,8 @@ class seLogerBot:
 
 
 
-    def getAllCards(self):
-        soup = self.getSoup(self.url)
+    def getAllCards(self,url):
+        soup = self.getSoup(url)
         cards = soup.findAll('div', {'data-test': 'sl.card-container'})
         return cards
 
@@ -116,6 +116,22 @@ class seLogerBot:
         for propertyData in self.getPropertiesData():
             data = json.dumps(propertyData, indent=5)
             requests.post('localhost:3000',data)
+
+    def getAllPagesPropertiesData(self):
+        soup = self.getSoup(self.url)
+        pagesNumber = self.getPagesNumber(soup)
+        for i in range(pagesNumber):
+            newUrl = self.url+'&LISTING-LISTpg='+str(i+1)
+#            soup = self.getSoup(newUrl)
+            self.getPropertiesData(newUrl)
+
+
+
+
+    def getPagesNumber(self,soup):
+        pagesList = soup.find('ul',{'data-test':'sl.simplepagination-container'})
+        pagesNumber = pagesList.findAll('li')
+        return len(pagesNumber)-1
 
 
 
