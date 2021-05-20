@@ -17,6 +17,8 @@ headers = {
 
 class seLogerBot:
     url = ""
+    peopertyCount = 0
+
     def __init__(self,url):
         self.url = url
 
@@ -28,15 +30,15 @@ class seLogerBot:
 
     def getPrice(self,soup):
         try:
-            return soup.find('div',{'data-test':'sl.price-container'}).getText().strip()
+            return int(soup.find('div',{'data-test':'sl.price-container'}).getText().strip().split()[0])
         except:
-            return None
+            return 0
 
     def getSize(self,soup):
         try:
-            return soup.find('ul',{'data-test':'sl.tags'}).getText().strip()
+            return int(soup.find('ul',{'data-test':'sl.tags'}).getText().strip().split()[0])
         except:
-            return "0 m²"
+            return 0
 
     def getCity(self,soup):
         try:
@@ -51,10 +53,14 @@ class seLogerBot:
         try:
             block =  soup.find('div',{'class':'ContentZone__Address-wghbmy-1 dlWlag'})
             spans = block.findAll('span')
-            return spans[0].getText().strip()
+            departmentName =  spans[0].getText().strip().split()
+            if len(departmentName) == 3:
+                return departmentName[0]+" "+departmentName[1]
+            return departmentName[0]
 
         except:
             return None
+
 
     def getUrl(self,soup):
         try:
