@@ -1,6 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
 import pprint
+import json
+
+
 headers = {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
     'Accept-Encoding': 'br, gzip, deflate',
@@ -53,6 +56,15 @@ class seLogerBot:
         except:
             return None
 
+    def getUrl(self,soup):
+        try:
+            urlsoup = soup.find('a',{'name':'classified-link'})
+            url = urlsoup['href']
+            return url
+        except:
+            return None
+
+
 
     def getPropertyData(self,cardSoup):
         owner = self.getOwner(cardSoup)
@@ -60,21 +72,27 @@ class seLogerBot:
         city = self.getCity(cardSoup)
         departement = self.getDepartement(cardSoup)
         size = self.getSize(cardSoup)
+        url = self.getUrl(cardSoup)
+
 
         return{
             'owner':owner,
             'price':price,
             'city':city,
-            'Departement':departement,
-            'size':size
+            'departement':departement,
+            'size':size,
+            'url':url
         }
 
 
     def getPropertiesData(self):
         cardsSoup = self.getAllCards()
+        l = []
         for card in cardsSoup:
             pprint.pprint(self.getPropertyData(card))
             pprint.pprint("============================")
+            l.append(card)
+        return l
 
 
 
@@ -85,11 +103,21 @@ class seLogerBot:
 
 
 
+
+
     def getSoup(self,url):
         response = requests.get(url,headers=headers)
         if response.ok:
             soup = BeautifulSoup(response.content,'html.parser')
             return soup
+
+
+    def sendToDB(self):
+        for propertyData in self.getPropertiesData():
+            data = json.dumps(propertyData, indent=5)
+            requests.post('localhost:3000',data)
+
+
 
 
 
