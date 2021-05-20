@@ -36,7 +36,7 @@ class seLogerBot:
         try:
             return soup.find('ul',{'data-test':'sl.tags'}).getText().strip()
         except:
-            return None
+            return "0 m²"
 
     def getCity(self,soup):
         try:
