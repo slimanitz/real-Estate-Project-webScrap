@@ -4,13 +4,13 @@ import pprint
 import json
 
 
+
 headers = {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    'Accept-Encoding': 'br, gzip, deflate',
     'Host': 'www.seloger.com',
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.2 Safari/605.1.15',
     'Accept-Language': 'fr-fr',
-    'Referer': 'https://www.seloger.com/immobilier/tout/immo-aix-en-provence-13/',
+    'Accept-Encoding': 'br, gzip, deflate',
     'Connection': 'keep-alive',
 }
 
@@ -49,7 +49,7 @@ class seLogerBot:
         except:
             return None
 
-    def getDepartement(self,soup):
+    def getDepartementName(self,soup):
         try:
             block =  soup.find('div',{'class':'ContentZone__Address-wghbmy-1 dlWlag'})
             spans = block.findAll('span')
@@ -60,6 +60,20 @@ class seLogerBot:
 
         except:
             return None
+
+
+    def getPostalCode(self,soup):
+        try:
+            block =  soup.find('div',{'class':'ContentZone__Address-wghbmy-1 dlWlag'})
+            spans = block.findAll('span')
+            postalCode =  spans[0].getText().strip().split()
+            if len(postalCode) == 3:
+                return postalCode[3].replace('(','').replace(')','')
+            return postalCode[1].replace('(','').replace(')','')
+
+        except:
+            return None
+
 
 
     def getUrl(self,soup):
@@ -76,9 +90,10 @@ class seLogerBot:
         owner = self.getOwner(cardSoup)
         price = self.getPrice(cardSoup)
         city = self.getCity(cardSoup)
-        departement = self.getDepartement(cardSoup)
+        departement = self.getDepartementName(cardSoup)
         size = self.getSize(cardSoup)
         url = self.getUrl(cardSoup)
+        postalCode = self.getPostalCode(cardSoup)
 
 
         return{
@@ -87,7 +102,8 @@ class seLogerBot:
             'city':city,
             'departement':departement,
             'size':size,
-            'url':url
+            'url':url,
+            'postalCode':postalCode
         }
 
 
@@ -113,7 +129,9 @@ class seLogerBot:
 
     def getSoup(self,url):
         response = requests.get(url,headers=headers)
+        print(response.content)
         if response.ok:
+            print(response.content)
             soup = BeautifulSoup(response.content,'html.parser')
             return soup
 
@@ -128,7 +146,6 @@ class seLogerBot:
         pagesNumber = self.getPagesNumber(soup)
         for i in range(pagesNumber):
             newUrl = self.url+'&LISTING-LISTpg='+str(i+1)
-#            soup = self.getSoup(newUrl)
             self.getPropertiesData(newUrl)
 
 
