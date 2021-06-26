@@ -6,25 +6,39 @@ from urllib.parse import parse_qs
 import datetime
 import urllib.request
 import json
+import random
 import time
+from urllib.parse import urlencode
+
+from proxyList import list
+
+
+#proxy = 'ip:port'
+
+# requests.get(url,headers=headers,proxies={'http':proxy,'https':proxy},timeout:4s)
+
 
 
 
 
 
 headers = {
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    'Host': 'www.seloger.com',
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.2 Safari/605.1.15',
+"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+"Accept-Encoding": "gzip, deflate",
     'Accept-Language': 'fr-fr',
-    'Accept-Encoding': 'br, gzip, deflate',
-    'Connection': 'keep-alive',
+"Dnt": "1",
+"Host": "www.seLoger.com",
+"Upgrade-Insecure-Requests": "1",
+"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36",
 }
 
 
 class seLogerBot:
     url = ""
     peopertyCount = 0
+    j = 0
+    session = requests.Session()
+
 
     def __init__(self,url):
         self.url = url
@@ -37,9 +51,14 @@ class seLogerBot:
 
     def getPrice(self,soup):
         try:
-            return int(soup.find('div',{'data-test':'sl.price-container'}).getText().strip().replace(' ','').replace('€',''))
+            return int(soup.find('div',{'data-test':'sl.price-container '}).getText().strip().replace(' ','').replace('€',''))
         except:
-            return 0
+            try:
+                return int(
+                    soup.find('div', {'data-test': 'sl.price-label'}).getText().strip().replace(' ', '').replace(
+                        '€', ''))
+            except:
+                return 0
 
     def getSize(self,soup):
         try:
@@ -72,7 +91,7 @@ class seLogerBot:
         try:
             block =  soup.find('div',{'class':'ContentZone__Address-wghbmy-1 dlWlag'})
             spans = block.findAll('span')
-            departmentName =  spans[0].getText().strip().split()
+            departmentName =  spans[0].getText().strip().split(" ")
             if len(departmentName) == 3:
                 return departmentName[0]+" "+departmentName[1]
             return departmentName[0]
@@ -119,7 +138,7 @@ class seLogerBot:
             return {
                 'owner': owner,
                 'price': price,
-                'city': "Quartier "+departement[0],
+                'city': "Quartier "+departement.split(" ")[0],
                 'departement': departement,
                 'size': size,
                 'url': url,
@@ -162,15 +181,23 @@ class seLogerBot:
 
 
     def getSoup(self,url):
-        response = requests.get(url,headers=headers)
-        time.sleep(5)
-        if response.ok:
-            soup = BeautifulSoup(response.content,'html.parser')
+
+        response = self.session.get(url,headers=headers)
+        print(response.status_code)
+
+
+        self.j+=1
+        if self.j %5 == 0:
+            time.sleep(random.randint(0, 100))
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text,'html.parser')
             return soup
+        print("blocked "+response.status_code)
+
 
 
     def sendToDB(self,propertyData):
-        myurl = "http://localhost:3000/boxs/sell"
+        myurl = "http://localhost:3000/boxs/rent"
         req = urllib.request.Request(myurl)
         req.add_header('Content-Type', 'application/json; charset=utf-8')
         jsondata = json.dumps(propertyData)
@@ -185,6 +212,7 @@ class seLogerBot:
         pagesNumber = self.getPagesNumber(soup)
         for i in range(pagesNumber):
             newUrl = self.url+'&LISTING-LISTpg='+str(i+1)
+            print(i)
             self.getPropertiesData(newUrl)
 
 
