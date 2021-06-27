@@ -10,8 +10,10 @@ allrentingPosts= 'https://www.seloger.com/list.htm?projects=1&types=3&places=[{%
 
 
 
-bot = seLogerBot(allrentingPosts)
+bot = seLogerBot(allrentingPosts,"rent")
+bot.getAllPagesPropertiesData()
 
+bot = seLogerBot(allsellingPosts,"sell")
 bot.getAllPagesPropertiesData()
 
 

@@ -10,12 +10,7 @@ import random
 import time
 from urllib.parse import urlencode
 
-from proxyList import list
 
-
-#proxy = 'ip:port'
-
-# requests.get(url,headers=headers,proxies={'http':proxy,'https':proxy},timeout:4s)
 
 
 
@@ -38,10 +33,12 @@ class seLogerBot:
     peopertyCount = 0
     j = 0
     session = requests.Session()
+    type= ""
 
 
-    def __init__(self,url):
+    def __init__(self,url,type):
         self.url = url
+        self.type = type
 
     def getOwner(self,soup):
         try:
@@ -182,22 +179,23 @@ class seLogerBot:
 
     def getSoup(self,url):
 
-        response = self.session.get(url,headers=headers)
+        response = self.session.get(url , headers=headers)
         print(response.status_code)
+        if response.status_code == 403:
+            time.sleep(7200)
+            return self.getSoup()
 
-
-        self.j+=1
-        if self.j %5 == 0:
-            time.sleep(random.randint(0, 100))
+        self.j += 1
+        if self.j % 5 == 0:
+            time.sleep(600)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text,'html.parser')
             return soup
-        print("blocked "+response.status_code)
 
 
 
     def sendToDB(self,propertyData):
-        myurl = "http://localhost:3000/boxs/rent"
+        myurl = "http://localhost:3000/boxs/"+self.type
         req = urllib.request.Request(myurl)
         req.add_header('Content-Type', 'application/json; charset=utf-8')
         jsondata = json.dumps(propertyData)
